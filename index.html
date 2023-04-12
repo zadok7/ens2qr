@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ENS2QR</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>ENS2QR</h1>
+    <p>ENS2QR will use your browser to detect ENS records, and generate a QR code for them. It will detect records that are set for Twitter, Telegram, Github, and Email</p>
+    <form id="ens-form">
+        <input type="text" id="ens-name" placeholder="Enter ENS name" required>
+        <button id="resolve" type="submit">Generate QR Codes</button>
+    </form>
+    <div id="loading">Loading...</div>
+
+    <div id="qr-codes"></div>
+    <div id="navigation">
+        <button id="prev" type="button">◀</button>
+        <button id="next" type="button">▶</button>
+      </div>
+      
+    <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.4.4/build/qrcode.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

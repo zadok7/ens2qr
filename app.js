@@ -147,6 +147,9 @@ async function resolveRecords(ensName) {
   }
   const dWebLink = ensName.endsWith('.eth') ? `https://${ensName}.limo` : undefined;
 
+  showNavigation();
+
+
   return {
     ensName: ensName || 'ENS Name not found',
     dWebLink,
@@ -159,20 +162,65 @@ async function resolveRecords(ensName) {
   };
 }
 
+async function downloadImage() {
+  const outlineBox = document.getElementById('qr-codes');
+  const ensName = document.getElementById('ens-name').value;
 
+  if (outlineBox) {
+    try {
+      const canvas = await html2canvas(outlineBox);
+      const imgData = canvas.toDataURL('image/png');
 
-/*
-form.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const ensName = ensNameInput.value;
-  const results = await resolveRecords(ensName);
-  const output = {
-    ensName,
-    ...results,
-  };
-  resultsOutput.textContent = JSON.stringify(output, null, 2);
-});
-*/
+      const { key } = qrDataArray[qrIndex];
+
+      const keyNameMapping = {
+        ensName: 'ensName',
+        ethAddress: 'ethAddress',
+        twitterName: 'twitterName',
+        telegramName: 'telegramName',
+        githubName: 'githubName',
+        emailAddress: 'emailAddress',
+        url: 'url',
+        dWebLink: 'dWebLink',
+      };
+
+      const filenameKeyName = keyNameMapping[key] || 'unknown';
+
+      const downloadLink = document.createElement('a');
+      downloadLink.href = imgData;
+      downloadLink.download = `${filenameKeyName}_${ensName}_QR.png`;
+      downloadLink.click();
+    } catch (error) {
+      console.error('Error capturing the content:', error);
+      alert('An error occurred while capturing the content. Please try again.');
+    }
+  } else {
+    alert('No content is visible at the moment.');
+  }
+}
+
+async function fetchENSMetadata(ensName) {
+  const url = `https://metadata.ens.domains/mainnet/avatar/${ensName}`;
+
+  try {
+      const response = await fetch(url);
+
+      if (response.headers.get("Content-Type").includes("application/json")) {
+          const data = await response.json();
+
+          if (data.message === "There is no avatar set under given address" ||
+              data.message === "Error fetching avatar: Provided url or NFT source is broken.") {
+              return "default.png";
+          }
+      } else {
+          const blob = await response.blob();
+          return URL.createObjectURL(blob);
+      }
+  } catch (error) {
+      console.error('Error fetching ENS metadata:', error);
+  }
+}
+
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -193,6 +241,7 @@ form.addEventListener('submit', async (event) => {
   };
   generateQRCodeForEachKeyValuePair(output);
   document.getElementById('qr-codes').style.display = 'block';
+  showNavigation();
 });
 
 
@@ -221,33 +270,59 @@ function generateQRCodeForEachKeyValuePair(data) {
 }
 
 
-function updateQRCode() {
+async function updateQRCode() {
+  const showTextCheckbox = document.getElementById('show-text');
+  const showText = showTextCheckbox.checked;
+  const showAvatarCheckbox = document.getElementById('show-avatar');
+  const showAvatar = showAvatarCheckbox.checked;
+  const circleAvatarCheckbox = document.getElementById('circle-avatar');
+  const circleAvatar = circleAvatarCheckbox.checked;
+
   const container = document.getElementById('qr-codes');
   container.innerHTML = ''; // Clear the container
 
   const { key, value } = qrDataArray[qrIndex];
 
   const friendlyKeyNames = {
-    ensName: 'ENS Name',
+    ensName: 'ENS',
     ethAddress: 'Ethereum Address',
     twitterName: 'Twitter',
     telegramName: 'Telegram',
     githubName: 'Github',
     emailAddress: 'Email',
     url: 'URL',
+    dWebLink: 'dWeb',
   };
 
   const wrapper = document.createElement('div');
-  wrapper.style.textAlign = 'center';
+  wrapper.style.display = 'flex';
+  wrapper.style.justifyContent = 'center';
+  wrapper.style.alignItems = 'center';
+  wrapper.style.flexDirection = 'column';
 
-  const title = document.createElement('h3');
-  title.textContent = friendlyKeyNames[key] || key;
-  wrapper.appendChild(title);
+  const imagesWrapper = document.createElement('div');
+  imagesWrapper.style.display = 'flex';
+  imagesWrapper.style.justifyContent = 'center';
+  imagesWrapper.style.alignItems = 'center';
+
+  const qrWrapper = document.createElement('div');
+  qrWrapper.style.textAlign = 'center';
 
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 512;
-  wrapper.appendChild(canvas);
+  qrWrapper.appendChild(canvas);
+  imagesWrapper.appendChild(qrWrapper);
+
+  const avatar = document.createElement('img');
+  avatar.width = 512;
+  avatar.height = 512;
+  avatar.style.display = showAvatar ? 'block' : 'none';
+  avatar.style.borderRadius = circleAvatar ? '50%' : '0';
+  imagesWrapper.appendChild(avatar);
+
+  wrapper.appendChild(imagesWrapper);
+
   container.appendChild(wrapper);
 
   QRCode.toCanvas(canvas, value, {
@@ -255,20 +330,38 @@ function updateQRCode() {
     height: canvas.height,
     errorCorrectionLevel: 'H', // Set error correction level to 'H'
     margin: 1, // Set margin to 1 module
-    quietZone: 2, // Set quiet zone to 2 modules
+    quietZone: 0, // Set quiet zone to 0 modules
   }, (error) => {
     if (error) {
       console.error(error);
     }
   });
 
-  const valueText = document.createElement('p');
-  valueText.classList.add('value');
-  valueText.innerHTML = 'QR scan value: <span class="non-bold">' + value + '</span>';
-  wrapper.appendChild(valueText);
+  // Fetch ENS avatar
+  const ensName = ensNameInput.value;
+  const avatarSrc = await fetchENSMetadata(ensName);
+
+  // Update the image source
+  avatar.src = avatarSrc;
+
+  // Add the border around both images and the keyValueText
+  wrapper.style.border = '3px solid #ccc';
+  wrapper.style.borderRadius = '10px';
+
+  // Remove border from the canvas (QR code)
+  canvas.style.border = 'none';
+
+  const keyValueText = document.createElement('p');
+  keyValueText.classList.add('value');
+  keyValueText.innerHTML = friendlyKeyNames[key] + ': <span class="non-bold">' + value + '</span>';
+  keyValueText.style.display = showText ? 'block' : 'none';
+
+  wrapper.appendChild(keyValueText);
 
   updateNavigationButtons();
 }
+
+
 
 function updateNavigationButtons() {
   document.getElementById('prev').disabled = qrIndex === 0;
@@ -294,6 +387,10 @@ function setNavigationVisibility(isVisible) {
 }
 
 
+document.getElementById('options').style.display = 'none';
+
+
+
 document.getElementById('prev').addEventListener('click', () => {
   qrIndex--;
   updateQRCode();
@@ -303,3 +400,30 @@ document.getElementById('next').addEventListener('click', () => {
   qrIndex++;
   updateQRCode();
 });
+
+document.getElementById('show-text').addEventListener('change', (event) => {
+  const showText = event.target.checked;
+  const valueText = document.querySelectorAll('.value');
+  if (showText) {
+    valueText.forEach((element) => {
+      element.style.display = 'block';
+    });
+  } else {
+    valueText.forEach((element) => {
+      element.style.display = 'none';
+    });
+  }
+  updateQRCode(true);
+});
+
+document.getElementById('show-avatar').addEventListener('change', () => {
+  updateQRCode();
+});
+
+document.getElementById('circle-avatar').addEventListener('change', () => {
+  updateQRCode();
+});
+
+function showNavigation() {
+  document.getElementById('options').style.display = 'block';
+}

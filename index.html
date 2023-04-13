@@ -15,13 +15,12 @@
 </head>
 <body>
     <h1>ENS2QR</h1>
-    <p>ENS2QR will use your browser to detect ENS records, and generate a QR code for them. It will detect records that are set for Twitter, Telegram, Github, and Email</p>
+    <p class="description">ENS2QR will use your browser to detect ENS records, and generate a QR code for them. By default, ENS Name, LIMO Link, and ETH Address are generated. QR codes are also made if any records are set for Twitter, Telegram, Github, Email, and URL.</p>
     <form id="ens-form">
-        <input type="text" id="ens-name" placeholder="Enter ENS name" required>
+        <input type="text" id="ens-name" placeholder="Enter ENS name" value="item1234.widgetstore.examples.ens2qr.eth" required>
         <button id="resolve" type="submit">Generate QR Codes</button>
     </form>
-    <div id="loading">Loading...</div>
-
+    <div id="loading">Loading<span>.</span><span>.</span><span>.</span></div>
     <div id="qr-codes"></div>
     <div id="navigation">
         <button id="prev" type="button">◀</button>

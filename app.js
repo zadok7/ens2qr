@@ -133,7 +133,10 @@ async function resolveRecords(ensName) {
     getEmail(ensName),
     getURL(ensName),
   ]);
-
+  if (!ethAddress && !twitterName && !telegramName && !githubName && !emailAddress && !url) {
+    alert('No ENS name found');
+    return;
+  }
   const dWebLink = ensName.endsWith('.eth') ? `https://${ensName}.limo` : undefined;
 
   return {
@@ -170,6 +173,11 @@ form.addEventListener('submit', async (event) => {
   setLoading(true);
   const results = await resolveRecords(ensName);
   setLoading(false);
+
+  if (!results) {
+    return;
+  }
+
   const output = {
     ensName,
     ...results,
@@ -234,7 +242,9 @@ function updateQRCode() {
   QRCode.toCanvas(canvas, value, {
     width: canvas.width,
     height: canvas.height,
-    errorCorrectionLevel: 'H' // Set error correction level to 'H'
+    errorCorrectionLevel: 'H', // Set error correction level to 'H'
+    margin: 1, // Set margin to 1 module
+    quietZone: 2, // Set quiet zone to 2 modules
   }, (error) => {
     if (error) {
       console.error(error);
@@ -243,7 +253,7 @@ function updateQRCode() {
 
   const valueText = document.createElement('p');
   valueText.classList.add('value');
-  valueText.textContent = 'QR scan value: ' + value;
+  valueText.innerHTML = 'QR scan value: <span class="non-bold">' + value + '</span>';
   wrapper.appendChild(valueText);
 
   updateNavigationButtons();

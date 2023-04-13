@@ -133,7 +133,15 @@ async function resolveRecords(ensName) {
     getEmail(ensName),
     getURL(ensName),
   ]);
-  if (!ethAddress && !twitterName && !telegramName && !githubName && !emailAddress && !url) {
+
+  if (
+    (ethAddress === '0x0000000000000000000000000000000000000000' || !ethAddress) &&
+    !twitterName &&
+    !telegramName &&
+    !githubName &&
+    !emailAddress &&
+    !url
+  ) {
     alert('No ENS name found');
     return;
   }
@@ -142,7 +150,7 @@ async function resolveRecords(ensName) {
   return {
     ensName: ensName || 'ENS Name not found',
     dWebLink,
-    ethAddress: ethAddress || 'Address not found',
+    ethAddress: ethAddress === '0x0000000000000000000000000000000000000000' ? 'Address not found' : ethAddress,
     twitterName: twitterName || 'Twitter name not found',
     telegramName: telegramName || 'Telegram name not found',
     githubName: githubName || 'GitHub name not found',
@@ -150,6 +158,7 @@ async function resolveRecords(ensName) {
     url: url || 'URL not found',
   };
 }
+
 
 
 /*
@@ -196,6 +205,7 @@ function generateQRCodeForEachKeyValuePair(data) {
   for (const key in data) {
     let value = data[key];
     if (value.includes('not found')) continue; // Skip if value is not found
+    if (key === 'ethAddress' && value === '0x0000000000000000000000000000000000000000') continue; // Skip if ETH address is all zeros
 
     if (key === 'twitterName') value = 'https://twitter.com/' + value;
     if (key === 'telegramName') value = 'https://t.me/' + value;
@@ -209,6 +219,7 @@ function generateQRCodeForEachKeyValuePair(data) {
   qrIndex = 0;
   updateQRCode();
 }
+
 
 function updateQRCode() {
   const container = document.getElementById('qr-codes');

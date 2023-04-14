@@ -1,3 +1,4 @@
+document.addEventListener("DOMContentLoaded", function() {
 const ENS_REGISTRY_ADDRESS = "0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e";
 const form = document.getElementById('ens-form');
 const ensNameInput = document.getElementById('ens-name');
@@ -152,4 +153,6 @@ form.addEventListener('submit', async (event) => {
     ...results,
   };
   resultsOutput.textContent = JSON.stringify(output, null, 2);
+});
+  
 });

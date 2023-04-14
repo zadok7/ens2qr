@@ -334,6 +334,12 @@ async function updateQRCode() {
   }, (error) => {
     if (error) {
       console.error(error);
+    } else {
+      const overlayCheckbox = document.getElementById('overlay-avatar');
+      const overlay = overlayCheckbox.checked;
+      if (overlay) {
+        drawAvatarOnQRCode(canvas, avatarSrc);
+      }
     }
   });
 
@@ -344,6 +350,27 @@ async function updateQRCode() {
   // Update the image source
   avatar.src = avatarSrc;
 
+  avatar.onload = () => {
+    // Generate QR code
+    QRCode.toCanvas(canvas, value, {
+      width: canvas.width,
+      height: canvas.height,
+      errorCorrectionLevel: 'H', // Set error correction level to 'H'
+      margin: 1, // Set margin to 1 module
+      quietZone: 0, // Set quiet zone to 0 modules
+    }, (error) => {
+      if (error) {
+        console.error(error);
+      } else {
+        const overlayCheckbox = document.getElementById('overlay-avatar');
+        const overlay = overlayCheckbox.checked;
+        if (overlay) {
+          drawAvatarOnQRCode(canvas, avatar.src);
+        }
+      }
+    });
+  };
+  
   // Add the border around both images and the keyValueText
   wrapper.style.border = '3px solid #ccc';
   wrapper.style.borderRadius = '10px';
@@ -360,6 +387,38 @@ async function updateQRCode() {
 
   updateNavigationButtons();
 }
+
+
+function drawAvatarOnQRCode(canvas, avatarSrc, scale = 0.3, outlineWidth = 2, outlineColor = 'black') {
+  const ctx = canvas.getContext('2d');
+  const img = new Image();
+  img.src = avatarSrc;
+  img.onload = () => {
+    const size = Math.min(canvas.width, canvas.height) * scale;
+    const x = (canvas.width - size) / 2;
+    const y = (canvas.height - size) / 2;
+
+    // Create a circular clipping region
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, 2 * Math.PI);
+    ctx.clip();
+
+    // Draw the avatar image within the clipping region
+    ctx.drawImage(img, x, y, size, size);
+
+    // Reset the clipping region
+    ctx.restore();
+
+    // Draw a circle with a 2px outline
+    ctx.beginPath();
+    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, 2 * Math.PI);
+    ctx.lineWidth = outlineWidth;
+    ctx.strokeStyle = outlineColor;
+    ctx.stroke();
+  };
+}
+
+
 
 
 
@@ -427,3 +486,8 @@ document.getElementById('circle-avatar').addEventListener('change', () => {
 function showNavigation() {
   document.getElementById('options').style.display = 'block';
 }
+
+// Add this code at the bottom of app.js
+document.getElementById('overlay-avatar').addEventListener('change', () => {
+  updateQRCode();
+});

@@ -491,3 +491,7 @@ function showNavigation() {
 document.getElementById('overlay-avatar').addEventListener('change', () => {
   updateQRCode();
 });
+
+function clearInput(inputElement) {
+  inputElement.value = '';
+}

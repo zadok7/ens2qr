@@ -142,10 +142,10 @@ async function resolveRecords(ensName) {
     !emailAddress &&
     !url
   ) {
-    alert('No ENS name found');
+    alert('No ENS name found or no records are set');
     return;
   }
-  const dWebLink = ensName.endsWith('.eth') ? `https://${ensName}.limo` : undefined;
+  const dWebLink = ensName.endsWith('.eth') ? `https://${ensName}.limo` : ensName;
 
   showNavigation();
 
